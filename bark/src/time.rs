@@ -21,11 +21,11 @@ pub fn now() -> TimestampMicros {
     // Contains a 64-bit value representing the number of 100-nanosecond
     // intervals since January 1, 1601 (UTC).
     // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime?redirectedfrom=MSDN
-    let micros = u64::from_le(wintime_le_bytes(
+    let micros = u64::from_le(
         [wintime_le.dwLowDateTime, wintime_le.dwHighDateTime]
             .align_to::<u64>()
             .1,
-    ))
+    )
         // 1Jan1601 to 1Jan1970
         - 116444736000000000u64
         * 100; // 100ns -> µs
