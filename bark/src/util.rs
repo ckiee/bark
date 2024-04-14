@@ -6,6 +6,14 @@ use crate::RunError;
 pub const SAMPLE_FORMAT: SampleFormat = SampleFormat::F32;
 
 pub fn make_stream_config(configs: Box<dyn Iterator<Item = SupportedStreamConfigRange>>) -> Result<StreamConfig, RunError> {
+                for (config_index, config) in configs.into_iter().enumerate() {
+                    println!(
+                        "      .{}. {:?}",
+                        config_index + 1,
+                        config
+                    );
+                }
+    panic!("debug");
     let config = configs
         .filter(|config| true)
         // .filter(|config| config.sample_format() == SAMPLE_FORMAT)
