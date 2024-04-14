@@ -1,5 +1,5 @@
 use std::io;
-use std::net::{Ipv4Addr, UdpSocket, SocketAddr, SocketAddrV4};
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 
 use derive_more::Display;
 use rustix::event::{PollFd, PollFlags};
@@ -24,7 +24,7 @@ pub enum ListenError {
 
 #[derive(StructOpt, Debug, Clone)]
 pub struct SocketOpt {
-    #[structopt(long, name="addr", env = "BARK_MULTICAST")]
+    #[structopt(long, name = "addr", env = "BARK_MULTICAST")]
     /// Multicast group address including port, eg. 224.100.100.100:1530
     pub multicast: SocketAddrV4,
 }
@@ -76,14 +76,13 @@ impl Socket {
 
         rustix::event::poll(&mut poll, -1)?;
 
-        let (nbytes, addr) =
-            if poll[0].revents() != PollFlags::empty() {
-                self.tx.recv_from(buf)?
-            } else if poll[1].revents() != PollFlags::empty() {
-                self.rx.recv_from(buf)?
-            } else {
-                unreachable!("poll returned with no readable sockets");
-            };
+        let (nbytes, addr) = if poll[0].revents() != PollFlags::empty() {
+            self.tx.recv_from(buf)?
+        } else if poll[1].revents() != PollFlags::empty() {
+            self.rx.recv_from(buf)?
+        } else {
+            unreachable!("poll returned with no readable sockets");
+        };
 
         Ok((nbytes, PeerId(addr)))
     }
@@ -93,27 +92,40 @@ fn open_multicast(group: Ipv4Addr, bind: SocketAddrV4) -> Result<socket2::Socket
     let socket = bind_socket(bind)?;
 
     // join multicast group
-    socket.join_multicast_v4(&group, &Ipv4Addr::UNSPECIFIED)
+    socket
+        .join_multicast_v4(&group, &Ipv4Addr::UNSPECIFIED)
         .map_err(|e| ListenError::JoinMulticastGroup(group, e))?;
 
     // set opts
-    socket.set_broadcast(true).map_err(ListenError::SetBroadcast)?;
+    socket
+        .set_broadcast(true)
+        .map_err(ListenError::SetBroadcast)?;
     let _ = socket.set_multicast_loop_v4(true);
 
     Ok(socket.into())
 }
 
 fn bind_socket(bind: SocketAddrV4) -> Result<socket2::Socket, ListenError> {
-    let socket = socket2::Socket::new(Domain::IPV4, Type::DGRAM, None)
-        .map_err(ListenError::Socket)?;
+    let socket =
+        socket2::Socket::new(Domain::IPV4, Type::DGRAM, None).map_err(ListenError::Socket)?;
 
-    socket.set_reuse_address(true).map_err(ListenError::SetReuseAddr)?;
+    socket
+        .set_reuse_address(true)
+        .map_err(ListenError::SetReuseAddr)?;
 
     if let Err(e) = socket.set_tos(IPTOS_DSCP_EF) {
         eprintln!("warning: failed to set IPTOS_DSCP_EF: {e:?}");
     }
 
-    socket.bind(&bind.into()).map_err(|e| ListenError::Bind(bind, e))?;
+    let sock_none_addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
+    let bindd = if cfg!(windows) {
+        sock_none_addr.into()
+    } else {
+        bind.into()
+    };
+    socket
+        .bind(&bindd)
+        .map_err(|e| ListenError::Bind(bind, e))?;
 
     Ok(socket)
 }
