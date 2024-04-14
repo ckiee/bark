@@ -14,9 +14,10 @@ pub fn now() -> TimestampMicros {
 // Port of https://stackoverflow.com/a/31335254
 #[cfg(windows)]
 pub fn now() -> TimestampMicros {
-    let wintime_le = unsafe {
+    let mut wintime_le = unsafe {
         windows::Win32::System::SystemInformation::GetSystemTimeAsFileTime();
     };
+    wintime_le = 1;
 
     // Contains a 64-bit value representing the number of 100-nanosecond
     // intervals since January 1, 1601 (UTC).
