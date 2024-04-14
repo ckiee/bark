@@ -77,6 +77,7 @@ impl Socket {
         rustix::event::poll(&mut poll, -1)?;
 
         let (nbytes, addr) = if poll[0].revents() != PollFlags::empty() {
+            eprintln!("rx");
             self.tx.recv_from(buf)?
         } else if poll[1].revents() != PollFlags::empty() {
             self.rx.recv_from(buf)?
