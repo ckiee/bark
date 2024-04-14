@@ -541,7 +541,9 @@ pub fn run(opt: ReceiveOpt) -> Result<(), RunError> {
     loop {
         let (packet, peer) = protocol.recv_from().map_err(RunError::Socket)?;
 
-        match packet.parse() {
+        let par = packet.parse();
+        dbg!(&par);
+        match par  {
             Some(PacketKind::Time(mut time)) => {
                 if !time.data().rid.matches(&receiver_id) {
                     // not for us - time packets are usually unicast,
