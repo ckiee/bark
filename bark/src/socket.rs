@@ -117,7 +117,7 @@ fn bind_socket(bind: SocketAddrV4) -> Result<socket2::Socket, ListenError> {
         eprintln!("warning: failed to set IPTOS_DSCP_EF: {e:?}");
     }
 
-    let sock_none_addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
+    let sock_none_addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, bind.port());
     let bindd: SockAddr = if cfg!(windows) {
         sock_none_addr.into()
     } else {
