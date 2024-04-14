@@ -3,7 +3,6 @@ use std::time::Duration;
 
 use cpal::traits::{HostTrait, DeviceTrait, StreamTrait};
 use cpal::InputCallbackInfo;
-use rustix::time::ClockId;
 use structopt::StructOpt;
 
 use bark_protocol::time::{SampleDuration, Timestamp};
@@ -212,7 +211,24 @@ pub fn run(opt: StreamOpt) -> Result<(), RunError> {
 }
 
 pub fn generate_session_id() -> SessionId {
-    let timespec = rustix::time::clock_gettime(ClockId::Realtime);
+    let wintime_le = unsafe {
+        windows::Win32::System::SystemInformation::GetSystemTimeAsFileTime()
+    };
+
+    // Contains a 64-bit value representing the number of 100-nanosecond
+    // intervals since January 1, 1601 (UTC).
+    // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime?redirectedfrom=MSDN
+
+    // Transmute two u32s to u64..
+    let micros = u64::from_le(
+        [wintime_le.dwLowDateTime, wintime_le.dwHighDateTime]
+            .align_to::<u64>()
+            .1[0],
+    )
+        // 1Jan1601 to 1Jan1970
+        - 116444736000000000u64
+        * 100; // 100ns -> µs
+
 
     SessionId(timespec.tv_nsec / 1000)
 }
