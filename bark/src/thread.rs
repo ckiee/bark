@@ -2,6 +2,7 @@ use std::ffi::CString;
 use std::io::ErrorKind;
 use std::sync::atomic::AtomicBool;
 
+#[cfg(nix)]
 pub fn set_name(name: &str) {
     let cstr = CString::new(name)
         .expect("not a cstring in set_thread_name");
@@ -9,6 +10,11 @@ pub fn set_name(name: &str) {
     unsafe {
         libc::pthread_setname_np(libc::pthread_self(), cstr.as_ptr());
     }
+}
+
+#[cfg(not(nix))]
+pub fn set_name(_name: &str) {
+    eprintln!("thread::set_name STUB (Windows?)");
 }
 
 #[cfg(not(windows))]
