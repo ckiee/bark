@@ -9,7 +9,7 @@ use self::ffi::speex_resampler_strerror;
 mod ffi {
     use std::ffi::{c_void, c_int, c_char};
 
-    #[link(name = "speexdsp")]
+    #[link(name = "speexdsp", kind = "static")]
     extern "C" {
         pub fn speex_resampler_init(
             nb_channels: u32,
