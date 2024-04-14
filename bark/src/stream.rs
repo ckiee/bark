@@ -36,7 +36,10 @@ pub fn run(opt: StreamOpt) -> Result<(), RunError> {
         .default_input_device()
         .ok_or(RunError::NoDeviceAvailable)?;
 
-    let config = util::config_for_device(&device)?;
+    let config = util::make_stream_config(
+        Box::new(device.supported_input_configs().map_err(RunError::StreamConfigs)?)
+    )?;
+
 
     let socket = Socket::open(opt.socket).map_err(RunError::Listen)?;
 

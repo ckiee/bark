@@ -486,7 +486,9 @@ pub fn run(opt: ReceiveOpt) -> Result<(), RunError> {
     let device = host.default_output_device()
         .ok_or(RunError::NoDeviceAvailable)?;
 
-    let config = util::config_for_device(&device)?;
+    let config = util::make_stream_config(
+        Box::new(device.supported_output_configs().map_err(RunError::StreamConfigs)?)
+    )?;
 
     struct SharedState {
         pub recv: Receiver,

@@ -1,11 +1,11 @@
-use cpal::{StreamConfig, BufferSize, SupportedBufferSize, SampleFormat};
+use cpal::{BufferSize, SampleFormat, StreamConfig, SupportedBufferSize, SupportedStreamConfigRange};
 use cpal::traits::DeviceTrait;
 
 use crate::RunError;
 
 pub const SAMPLE_FORMAT: SampleFormat = SampleFormat::F32;
 
-pub fn config_for_device(device: &cpal::Device) -> Result<StreamConfig, RunError> {
+pub fn make_stream_config(configs: Box<dyn Iterator<Item = SupportedStreamConfigRange>>) -> Result<StreamConfig, RunError> {
     let configs = device.supported_input_configs()
         .map_err(RunError::StreamConfigs)?;
 
