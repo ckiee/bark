@@ -1,13 +1,10 @@
-use nix::sys::time::TimeValLike;
-use nix::time::ClockId;
-
 use bark_protocol::types::TimestampMicros;
+use rustix::time::ClockId;
 
 pub fn now() -> TimestampMicros {
-    let timespec = nix::time::clock_gettime(ClockId::CLOCK_BOOTTIME)
-    .expect("clock_gettime(CLOCK_BOOTTIME) failed, are we on Linux?");
+    let timespec = rustix::time::clock_gettime(ClockId::Boottime);
 
-    let micros = u64::try_from(timespec.num_microseconds())
+    let micros = u64::try_from(timespec.tv_nsec / 1000)
         .expect("cannot convert i64 time value to u64");
 
     TimestampMicros(micros)

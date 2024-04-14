@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use cpal::traits::{HostTrait, DeviceTrait, StreamTrait};
 use cpal::InputCallbackInfo;
+use rustix::time::ClockId;
 use structopt::StructOpt;
 
 use bark_protocol::time::{SampleDuration, Timestamp};
@@ -211,10 +212,7 @@ pub fn run(opt: StreamOpt) -> Result<(), RunError> {
 }
 
 pub fn generate_session_id() -> SessionId {
-    use nix::sys::time::TimeValLike;
+    let timespec = rustix::time::clock_gettime(ClockId::Realtime);
 
-    let timespec = nix::time::clock_gettime(nix::time::ClockId::CLOCK_REALTIME)
-        .expect("clock_gettime(CLOCK_REALTIME)");
-
-    SessionId(timespec.num_microseconds())
+    SessionId(timespec.tv_nsec / 1000)
 }

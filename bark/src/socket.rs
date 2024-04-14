@@ -1,9 +1,8 @@
 use std::io;
 use std::net::{Ipv4Addr, UdpSocket, SocketAddr, SocketAddrV4};
-use std::os::fd::AsRawFd;
 
 use derive_more::Display;
-use nix::poll::{PollFd, PollFlags};
+use rustix::event::{PollFd, PollFlags};
 use socket2::{Domain, Type};
 use structopt::StructOpt;
 
@@ -71,16 +70,16 @@ impl Socket {
 
     pub fn recv_from(&self, buf: &mut [u8]) -> Result<(usize, PeerId), io::Error> {
         let mut poll = [
-            PollFd::new(self.tx.as_raw_fd(), PollFlags::POLLIN),
-            PollFd::new(self.rx.as_raw_fd(), PollFlags::POLLIN),
+            PollFd::new(&self.tx, PollFlags::IN),
+            PollFd::new(&self.rx, PollFlags::IN),
         ];
 
-        nix::poll::poll(&mut poll, -1)?;
+        rustix::event::poll(&mut poll, -1)?;
 
         let (nbytes, addr) =
-            if poll[0].any() == Some(true) {
+            if poll[0].revents() != PollFlags::empty() {
                 self.tx.recv_from(buf)?
-            } else if poll[1].any() == Some(true) {
+            } else if poll[1].revents() != PollFlags::empty() {
                 self.rx.recv_from(buf)?
             } else {
                 unreachable!("poll returned with no readable sockets");

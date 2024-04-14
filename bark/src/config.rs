@@ -58,10 +58,15 @@ pub fn read() -> Option<Config> {
     }
 
     // otherwise try xdg config dirs
-    let dirs = xdg::BaseDirectories::new().unwrap();
-    if let Some(config) = dirs.find_config_file("bark.toml") {
-        return load_file(&config);
+    #[cfg(not(windows))]
+    {
+        let dirs = xdg::BaseDirectories::new().unwrap();
+        if let Some(config) = dirs.find_config_file("bark.toml") {
+            return load_file(&config);
+        }
     }
+
+    // TODO: use platform-agnostic crate.
 
     // found nothing
     None

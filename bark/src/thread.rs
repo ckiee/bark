@@ -11,6 +11,7 @@ pub fn set_name(name: &str) {
     }
 }
 
+#[cfg(not(windows))]
 pub fn set_realtime_priority() {
     let rc = unsafe {
         libc::sched_setscheduler(
@@ -44,4 +45,9 @@ pub fn set_realtime_priority() {
         }
     }
 
+}
+
+#[cfg(windows)]
+pub fn set_realtime_priority() {
+    eprintln!("set_realtime_priority STUB");
 }

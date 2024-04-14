@@ -1,8 +1,8 @@
 use bark_protocol::types::stats::node::NodeStats;
 
 pub fn get() -> NodeStats {
-    let username = get_username();
-    let hostname = get_hostname();
+    let username = whoami::fallible::username().unwrap();
+    let hostname = whoami::fallible::hostname().unwrap();
 
     NodeStats {
         username: as_fixed(&username),
@@ -30,15 +30,3 @@ fn as_fixed(s: &str) -> [u8; 32] {
     buff
 }
 
-fn get_username() -> String {
-    let uid = nix::unistd::getuid();
-    let user = nix::unistd::User::from_uid(uid).ok().flatten();
-
-    user.map(|u| u.name)
-        .unwrap_or_else(|| uid.to_string())
-}
-
-fn get_hostname() -> String {
-    let hostname = nix::unistd::gethostname().ok().unwrap_or_default();
-    hostname.to_string_lossy().to_string()
-}
