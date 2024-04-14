@@ -3,7 +3,7 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 
 use derive_more::Display;
 use rustix::event::{PollFd, PollFlags};
-use socket2::{Domain, Type};
+use socket2::{Domain, SockAddr, Type};
 use structopt::StructOpt;
 
 use bark_protocol::buffer::PacketBuffer;
@@ -18,7 +18,7 @@ pub enum ListenError {
     Socket(io::Error),
     SetReuseAddr(io::Error),
     SetBroadcast(io::Error),
-    Bind(SocketAddrV4, io::Error),
+    Bind(SockAddr, io::Error),
     JoinMulticastGroup(Ipv4Addr, io::Error),
 }
 
@@ -118,14 +118,14 @@ fn bind_socket(bind: SocketAddrV4) -> Result<socket2::Socket, ListenError> {
     }
 
     let sock_none_addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
-    let bindd = if cfg!(windows) {
+    let bindd: SockAddr = if cfg!(windows) {
         sock_none_addr.into()
     } else {
         bind.into()
     };
     socket
         .bind(&bindd)
-        .map_err(|e| ListenError::Bind(bind, e))?;
+        .map_err(|e| ListenError::Bind(bindd, e))?;
 
     Ok(socket)
 }
